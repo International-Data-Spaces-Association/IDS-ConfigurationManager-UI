@@ -10,11 +10,18 @@
   height: 80px;
   background-color: var(--v-text4-base);
   margin-bottom: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center; 
 }
 
 .fraunhofer-logo {
   margin-left: 58px;
   margin-top: 21px;
+}
+
+.title-logo {
+  height: 55px;
 }
 
 .navigation-menu .v-list-item__title {
