@@ -473,6 +473,15 @@ app.get('/enum', (req, res) => {
     });
 });
 
+app.get('/resources/requested', (req, res) => {
+    get(configModelUrl + "/api/ui/resources/requested").then(response => {
+        res.send(response.data);
+    }).catch(error => {
+        console.log("Error on GET /resources/requested", error.response.status);
+        res.send(error);
+    });
+});
+
 app.post('/approute', (req, res) => {
     let params = "?description=" + req.query.description;
     post(configModelUrl + "/api/ui/approute" + params).then(response => {

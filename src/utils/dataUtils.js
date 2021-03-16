@@ -89,6 +89,21 @@ export default {
         return restUtils.get(backendUrl + "/offeredresourcesstats");
     },
 
+    getRequestedResources() {
+        return new Promise(function (resolve, reject) {
+            restUtils.get(backendUrl + "/resources/requested").then(response => {
+                let resources = [];
+                for (var idsResource of response.data) {
+                    resources.push(clientDataModel.convertIdsResource(idsResource));
+                }
+                resolve(resources);
+            }).catch(error => {
+                console.log("Error in getRequestedResources(): ", error);
+                reject();
+            });
+        });
+    },
+
     getResources(callback) {
         restUtils.get(backendUrl + "/resources").then(response => {
             let resources = [];

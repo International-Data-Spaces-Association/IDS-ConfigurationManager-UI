@@ -18,17 +18,8 @@ export default {
                 value: 'description'
             },
             {
-                text: 'Type',
-                value: 'sourceType'
-            }, {
                 text: 'Policy',
                 value: 'policyName'
-            },
-            {
-                text: '',
-                value: 'actions',
-                sortable: false,
-                align: 'right'
             }
             ],
             resources: [],
@@ -40,9 +31,11 @@ export default {
         this.getResources();
     },
     methods: {
-        getResources() {
-            // this.$root.$emit('showBusyIndicator', true);
-            // TODO Get resources 
+        async getResources() {
+            this.$root.$emit('showBusyIndicator', true);
+            this.$data.resources = (await dataUtils.getRequestedResources());
+            this.$root.$emit('showBusyIndicator', false);
+            this.$forceUpdate();
         },
         filterChanged() {
             if (this.$data.filterResourceType == null | this.$data.filterResourceType == "All") {

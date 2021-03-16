@@ -71,7 +71,7 @@ export default {
             }, {
                 path: "backendconnectionsconsumption",
                 name: "Backend Connections (Consumation)",
-                component: null
+                component: BackendConnectionsPage
             }, {
                 path: "routesconsumption",
                 name: "Routes (Consumption)",
