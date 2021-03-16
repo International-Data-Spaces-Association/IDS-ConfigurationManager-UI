@@ -8,9 +8,11 @@
             <v-form v-model="valid" ref="form">
                 <v-row no-gutters>
                     <v-col cols="12" md="5" class="selectcol">
-                        <v-select label="Output" v-model="outputId" :items="outputs" item-text="text" item-value="id"
-                            :rules="defaultRule">
+                        <v-select v-if="outputs.length > 0" label="Output" v-model="outputId" :items="outputs"
+                            item-text="text" item-value="id" :rules="defaultRule">
                         </v-select>
+                        <div v-if="outputs.length == 0 && sourceNode != null" class="noselectdiv">
+                            {{ sourceNode.text }}</div>
                     </v-col>
                     <v-col cols="12" md="2" class="inoutarrowcol">
                         <div class="inoutarrow">➞</div>
