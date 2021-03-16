@@ -8,4 +8,5 @@ sed -i "s@#SHOW_FREENOW_APP#@$SHOW_FREENOW_APP@g" .env
 
 
 
-npm run-script startprod
+npm run backend &
+serve -l 8082 -s dist
