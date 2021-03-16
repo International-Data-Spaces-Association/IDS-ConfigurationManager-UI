@@ -49,32 +49,33 @@ export default {
             this.$refs.chart.clear();
             dataUtils.getRoute(id, route => {
                 this.$data.currentRoute = route;
-                console.log("LOAD ROUTE: ", route);
-                this.$data.description = route["ids:routeDescription"];
-                for (let subRoute of route["ids:hasSubRoute"]) {
-                    let start = subRoute["ids:appRouteStart"][0];
-                    let end = subRoute["ids:appRouteEnd"][0];
-                    let output = undefined;
-                    if (subRoute["ids:appRouteOutput"] !== undefined) {
-                        output = subRoute["ids:appRouteOutput"][0];
-                    }
-                    this.addNode(id, start, output, () => {
-                        this.addNode(id, end, output, () => {
-                            let startNodeObjectId = start["@id"];
-                            if (start["@type"] == "ids:AppEndpoint") {
-                                startNodeObjectId = dataUtils.getAppIdOfEndpointId(start["@id"]);
-                            }
-                            let endNodeObjectId = end["@id"];
-                            if (end["@type"] == "ids:AppEndpoint") {
-                                endNodeObjectId = dataUtils.getAppIdOfEndpointId(end["@id"]);
-                            }
-                            let startNodeId = dataUtils.getNodeIdByObjectId(startNodeObjectId, this.$refs.chart.internalNodes);
-                            let endNodeId = dataUtils.getNodeIdByObjectId(endNodeObjectId, this.$refs.chart.internalNodes);
-                            this.loadConnection(startNodeId, start["@id"], endNodeId, end["@id"]);
+                this.$data.description = route["ids:routeDescription"].replace("addroutesconsumption_", "").replace("addroutesoffering_", "");
+                if (route["ids:hasSubRoute"] !== undefined) {
+                    for (let subRoute of route["ids:hasSubRoute"]) {
+                        let start = subRoute["ids:appRouteStart"][0];
+                        let end = subRoute["ids:appRouteEnd"][0];
+                        let output = undefined;
+                        if (subRoute["ids:appRouteOutput"] !== undefined) {
+                            output = subRoute["ids:appRouteOutput"][0];
+                        }
+                        this.addNode(id, start, output, () => {
+                            this.addNode(id, end, output, () => {
+                                let startNodeObjectId = start["@id"];
+                                if (start["@type"] == "ids:AppEndpoint") {
+                                    startNodeObjectId = dataUtils.getAppIdOfEndpointId(start["@id"]);
+                                }
+                                let endNodeObjectId = end["@id"];
+                                if (end["@type"] == "ids:AppEndpoint") {
+                                    endNodeObjectId = dataUtils.getAppIdOfEndpointId(end["@id"]);
+                                }
+                                let startNodeId = dataUtils.getNodeIdByObjectId(startNodeObjectId, this.$refs.chart.internalNodes);
+                                let endNodeId = dataUtils.getNodeIdByObjectId(endNodeObjectId, this.$refs.chart.internalNodes);
+                                this.loadConnection(startNodeId, start["@id"], endNodeId, end["@id"]);
+                            });
                         });
-                    });
 
 
+                    }
                 }
                 this.$root.$emit('showBusyIndicator', false);
                 this.$forceUpdate();
@@ -166,7 +167,6 @@ export default {
         newIdsEndpointNodeSaved(node) {
             let x = this.getXForNewNode();
             let y = 150;
-            console.log("X Y: ", x, y);
             node.x = x;
             node.y = y;
             this.$refs.chart.add(node);
@@ -232,9 +232,7 @@ export default {
             if (y === undefined) {
                 y = 150;
             }
-            console.log("X Y: ", x, y);
             let resource = clientDataModel.convertIdsResource(output);
-            console.log(">>> ADD IDS END: ", resource);
             this.$refs.chart.add({
                 id: +new Date(),
                 x: x,
@@ -276,7 +274,8 @@ export default {
             for (var connection of connections) {
                 connectionsCopy.push(connection);
             }
-            dataUtils.createNewRoute(this.$data.description).then(routeId => {
+
+            dataUtils.createNewRoute(this.$router.currentRoute.path.replace("/", "") + "_" + this.$data.description).then(routeId => {
                 this.saveRouteSteps(routeId, connections, nodes);
             });
         },
@@ -286,7 +285,6 @@ export default {
             for (var connection of connections) {
                 var sourceNode = dataUtils.getNode(connection.source.id, nodes);
                 var destinationNode = dataUtils.getNode(connection.destination.id, nodes);
-                console.log(sourceNode, connection.sourceEndpointId + " => " + connection.destinationEndpointId, destinationNode);
                 if (sourceNode.type == "backendnode") {
                     genericEndpointId = sourceNode.objectId;
                 }

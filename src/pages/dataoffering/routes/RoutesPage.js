@@ -22,11 +22,21 @@ export default {
             }],
             sortBy: 'description',
             sortDesc: true,
-            routes: []
+            routes: [],
+            addRouteRef: ''
         };
+    },
+    watch: {
+        $route() {
+            if (this.$route.path == "/routesoffering" || this.$route.path == "/routesconsumption") {
+                this.getRoutes();
+                this.$data.addRouteRef = "/add" + this.$router.currentRoute.path.replace("/", "");
+            }
+        }
     },
     mounted: function () {
         this.getRoutes();
+        this.$data.addRouteRef = "/add" + this.$router.currentRoute.path.replace("/", "");
     },
     methods: {
         getRoutes() {
@@ -35,10 +45,12 @@ export default {
             dataUtils.getRoutes(routes => {
                 this.$data.routes = [];
                 for (let route of routes) {
-                    this.$data.routes.push({
-                        id: route["@id"],
-                        description: route["ids:routeDescription"]
-                    });
+                    if (route["ids:routeDescription"].startsWith("add" + this.$router.currentRoute.path.replace("/", "") + "_")) {
+                        this.$data.routes.push({
+                            id: route["@id"],
+                            description: route["ids:routeDescription"].replace("addroutesconsumption_", "").replace("addroutesoffering_", "")
+                        });
+                    }
                 }
                 this.$root.$emit('showBusyIndicator', false);
             });
@@ -61,7 +73,7 @@ export default {
             }
         },
         editItem(item) {
-            this.$router.push('editroute?routeId=' + item.id);
+            this.$router.push('edit' + this.$router.currentRoute.path.replace("/", "") + '?routeId=' + item.id);
         }
     }
 };
