@@ -162,6 +162,15 @@ export default {
         },
         newConnectionSaved(connection) {
             // New connection saved for the first time.
+            if (connection.sourceEndpointId == null) {
+                dataUtils.createConnectorEndpoint("http://data_" + Date.now(), endpointId => {
+                    connection.sourceEndpointId = endpointId;
+                });
+            } else if (connection.destinationEndpointId == null) {
+                dataUtils.createConnectorEndpoint("http://data_" + Date.now(), endpointId => {
+                    connection.destinationEndpointId = endpointId;
+                });
+            }
             this.$refs.chart.internalConnections.push(connection);
         },
         newIdsEndpointNodeSaved(node) {
@@ -223,7 +232,19 @@ export default {
             });
         },
         showAddIdsEndpointDialog() {
-            this.$refs.editIDSEndpointDialog.show(null);
+            if (this.$route.path == "/addroutesconsumption") {
+                this.newIdsEndpointNodeSaved({
+                    id: +new Date(),
+                    x: 0,
+                    y: 0,
+                    name: 'IDS Endpoint',
+                    type: 'idsendpointnode',
+                    text: "IDS Endpoint",
+                    objectId: null,
+                });
+            } else {
+                this.$refs.editIDSEndpointDialog.show(null);
+            }
         },
         addIdsEndpoint(id, x, y, output) {
             if (x === undefined) {
@@ -232,26 +253,38 @@ export default {
             if (y === undefined) {
                 y = 150;
             }
-            let resource = clientDataModel.convertIdsResource(output);
-            this.$refs.chart.add({
-                id: +new Date(),
-                x: x,
-                y: y,
-                name: 'IDS Endpoint',
-                type: 'idsendpointnode',
-                text: "IDS Endpoint",
-                objectId: id,
-                title: resource.title,
-                description: resource.description,
-                language: resource.language,
-                keywords: resource.keywords,
-                version: resource.version,
-                standardlicense: resource.standardLicense,
-                publisher: resource.publisher,
-                contractJson: resource.contract,
-                sourceType: resource.sourceType,
-                brokerList: resource.brokerList
-            });
+            if (this.$route.path.includes("consumption")) {
+                this.$refs.chart.add({
+                    id: +new Date(),
+                    x: x,
+                    y: y,
+                    name: 'IDS Endpoint',
+                    type: 'idsendpointnode',
+                    text: "IDS Endpoint",
+                    objectId: id,
+                });
+            } else {
+                let resource = clientDataModel.convertIdsResource(output);
+                this.$refs.chart.add({
+                    id: +new Date(),
+                    x: x,
+                    y: y,
+                    name: 'IDS Endpoint',
+                    type: 'idsendpointnode',
+                    text: "IDS Endpoint",
+                    objectId: id,
+                    title: resource.title,
+                    description: resource.description,
+                    language: resource.language,
+                    keywords: resource.keywords,
+                    version: resource.version,
+                    standardlicense: resource.standardLicense,
+                    publisher: resource.publisher,
+                    contractJson: resource.contract,
+                    sourceType: resource.sourceType,
+                    brokerList: resource.brokerList
+                });
+            }
         },
         saveRoute() {
             this.$data.saveMessage = "";
@@ -282,24 +315,41 @@ export default {
         async saveRouteSteps(routeId, connections, nodes) {
             let subRoutePromises = [];
             let genericEndpointId = null;
-            for (var connection of connections) {
-                var sourceNode = dataUtils.getNode(connection.source.id, nodes);
-                var destinationNode = dataUtils.getNode(connection.destination.id, nodes);
-                if (sourceNode.type == "backendnode") {
-                    genericEndpointId = sourceNode.objectId;
-                }
-                if (destinationNode.type == "idsendpointnode") {
-                    subRoutePromises.push(await dataUtils.createResourceIdsEndpointAndAddSubRoute(destinationNode.title,
-                        destinationNode.description, destinationNode.language, destinationNode.keywords,
-                        destinationNode.version, destinationNode.standardlicense,
-                        destinationNode.publisher, destinationNode.contractJson, destinationNode.sourceType,
-                        destinationNode.brokerList, genericEndpointId, routeId, connection.sourceEndpointId, sourceNode.x,
-                        sourceNode.y, destinationNode.x, destinationNode.y));
-                } else {
+            if (this.$route.path == "/addroutesconsumption") {
+                for (let connection of connections) {
+                    let sourceNode = dataUtils.getNode(connection.source.id, nodes);
+                    let destinationNode = dataUtils.getNode(connection.destination.id, nodes);
                     subRoutePromises.push(await dataUtils.createSubRoute(routeId, connection.sourceEndpointId, sourceNode.x,
                         sourceNode.y, connection.destinationEndpointId, destinationNode.x, destinationNode.y, null));
                 }
+            } else {
+                for (let connection of connections) {
+                    let sourceNode = dataUtils.getNode(connection.source.id, nodes);
+                    let destinationNode = dataUtils.getNode(connection.destination.id, nodes);
+                    if (sourceNode.type == "backendnode" || destinationNode == "backendnode") {
+                        genericEndpointId = sourceNode.objectId;
+                    }
+                    if (sourceNode.type == "idsendpointnode") {
+                        subRoutePromises.push(await dataUtils.createResourceIdsEndpointAndAddSubRoute(destinationNode.title,
+                            destinationNode.description, destinationNode.language, destinationNode.keywords,
+                            destinationNode.version, destinationNode.standardlicense,
+                            destinationNode.publisher, destinationNode.contractJson, destinationNode.sourceType,
+                            destinationNode.brokerList, connection.sourceEndpointId, routeId, connection.desitnationEndpointId, sourceNode.x,
+                            sourceNode.y, destinationNode.x, destinationNode.y, true));
+                    }
+                    else if (destinationNode.type == "idsendpointnode") {
+                        subRoutePromises.push(await dataUtils.createResourceIdsEndpointAndAddSubRoute(destinationNode.title,
+                            destinationNode.description, destinationNode.language, destinationNode.keywords,
+                            destinationNode.version, destinationNode.standardlicense,
+                            destinationNode.publisher, destinationNode.contractJson, destinationNode.sourceType,
+                            destinationNode.brokerList, genericEndpointId, routeId, connection.sourceEndpointId, sourceNode.x,
+                            sourceNode.y, destinationNode.x, destinationNode.y, false));
+                    } else {
+                        subRoutePromises.push(await dataUtils.createSubRoute(routeId, connection.sourceEndpointId, sourceNode.x,
+                            sourceNode.y, connection.destinationEndpointId, destinationNode.x, destinationNode.y, null));
+                    }
 
+                }
             }
             Promise.all(subRoutePromises).then(() => {
                 this.$root.$emit('showBusyIndicator', false);
