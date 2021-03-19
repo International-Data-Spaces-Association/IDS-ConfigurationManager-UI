@@ -146,7 +146,7 @@ export default {
             if (node.type == "idsendpointnode") {
                 this.$refs.editIDSEndpointDialog.show(node);
             } else {
-                this.$refs.editNodeDialog.title = "Edit " + node.name;
+                this.$refs.editNodeDialog.title = "Edit " + node.name + " Details";
                 this.$refs.editNodeDialog.dialog = true;
             }
         },
