@@ -94,7 +94,7 @@ export default {
     },
 
     getRequestedResources() {
-        return new Promise(function (resolve, reject) {
+        return new Promise(function (resolve) {
             restUtils.get(backendUrl + "/resources/requested").then(response => {
                 let resources = [];
                 for (var idsResource of response.data) {
@@ -103,7 +103,7 @@ export default {
                 resolve(resources);
             }).catch(error => {
                 console.log("Error in getRequestedResources(): ", error);
-                reject();
+                resolve([]);
             });
         });
     },
