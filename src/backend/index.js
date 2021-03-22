@@ -151,8 +151,8 @@ app.put('/representation', (req, res) => {
 });
 
 app.get('/approutes', (req, res) => {
-    get(configModelUrl + "/api/ui/configmodel").then(response => {
-        res.send(response.data["ids:appRoute"]);
+    get(configModelUrl + "/api/ui/approutes").then(response => {
+        res.send(response.data);
     }).catch(error => {
         console.log("Error on GET /approutes", error.response.status);
         res.send(error);
