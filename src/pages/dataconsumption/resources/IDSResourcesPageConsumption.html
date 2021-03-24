@@ -7,7 +7,8 @@
     </v-row>
     <v-row no-gutters>
       <v-col cols="12" md="11" sm="12">
-        <v-data-table :headers="headers" :items="resources" :items-per-page="5" :search="search">
+        <v-data-table :headers="headers" :items="resources" :items-per-page="5" :search="search" no-data-text="No resources available">
+          no-data-text="No resources available">
         </v-data-table>
       </v-col>
     </v-row>

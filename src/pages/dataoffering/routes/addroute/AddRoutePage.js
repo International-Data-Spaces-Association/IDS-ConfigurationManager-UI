@@ -25,13 +25,15 @@ export default {
             currentRoute: null,
             description: "",
             saveMessage: "",
-            isNewRoute: false
+            isNewRoute: false,
+            routeValid: true
         };
     },
     mounted: function () {
         this.getBackendConnections(() => {
             this.getApps(() => {
                 this.$data.saveMessage = "";
+                this.validateRoute();
                 if (this.$route.query.routeId === undefined) {
                     this.$data.isNewRoute = true;
                     this.$data.currentRoute = null;
@@ -41,7 +43,6 @@ export default {
                 }
             });
         });
-
     },
     methods: {
         loadRoute(id) {
@@ -85,16 +86,16 @@ export default {
             dataUtils.getEndpointInfo(routeId, endpoint["@id"], endpointInfo => {
                 if (endpoint["@type"] == "ids:GenericEndpoint") {
                     if (!this.nodeExists(endpoint["@id"])) {
-                        this.addBackend(endpoint["@id"], endpointInfo.xCoordinate, endpointInfo.yCoordinate);
+                        this.addBackend(endpoint["@id"], endpointInfo.xcoordinate, endpointInfo.ycoordinate);
                     }
                 } else if (endpoint["@type"] == "ids:AppEndpoint") {
                     let appId = dataUtils.getAppIdOfEndpointId(endpoint["@id"]);
                     if (!this.nodeExists(appId)) {
-                        this.addApp(appId, endpointInfo.xCoordinate, endpointInfo.yCoordinate);
+                        this.addApp(appId, endpointInfo.xcoordinate, endpointInfo.ycoordinate);
                     }
                 } else if (endpoint["@type"] == "ids:ConnectorEndpoint") {
                     if (!this.nodeExists(endpoint["@id"])) {
-                        this.addIdsEndpoint(endpoint["@id"], endpointInfo.xCoordinate, endpointInfo.yCoordinate, output);
+                        this.addIdsEndpoint(endpoint["@id"], endpointInfo.xcoordinate, endpointInfo.ycoordinate, output);
                     }
                 }
                 callback();
@@ -172,6 +173,7 @@ export default {
                 });
             }
             this.$refs.chart.internalConnections.push(connection);
+            this.validateRoute();
         },
         newIdsEndpointNodeSaved(node) {
             let x = this.getXForNewNode();
@@ -179,6 +181,7 @@ export default {
             node.x = x;
             node.y = y;
             this.$refs.chart.add(node);
+            this.validateRoute();
         },
         showAddBackendDialog() {
             this.$refs.addBackendDialog.show(this.$data.backendConnections, "Backend Connection", "URL", "url");
@@ -203,6 +206,7 @@ export default {
                 text: backend.url,
                 objectId: id,
             });
+            this.validateRoute();
         },
         getXForNewNode() {
             let x = 20;
@@ -230,6 +234,7 @@ export default {
                 text: app.title,
                 objectId: id,
             });
+            this.validateRoute();
         },
         showAddIdsEndpointDialog() {
             if (this.$route.path == "/addroutesconsumption") {
@@ -285,6 +290,7 @@ export default {
                     brokerList: resource.brokerList
                 });
             }
+            this.validateRoute();
         },
         saveRoute() {
             this.$data.saveMessage = "";
@@ -356,6 +362,49 @@ export default {
                 this.$data.receivedResults = [];
                 this.$data.saveMessage = "Successfully saved."
             });
+        },
+        connectionRemoved() {
+            this.validateRoute();
+        },
+        nodeRemoved() {
+            this.validateRoute();
+        },
+        validateRoute() {
+            this.$data.saveMessage = "";
+            this.$data.routeValid = true;
+            if (this.$refs.chart.internalNodes.length < 2 || this.$refs.chart.internalConnections.length < 1) {
+                this.$data.saveMessage = "At least two connected nodes required.";
+                this.$data.routeValid = false;
+            }
+            if (this.$route.path.includes("consumption")) {
+                for (let connection of this.$refs.chart.internalConnections) {
+                    let sourceNode = dataUtils.getNode(connection.source.id, this.$refs.chart.internalNodes);
+                    let destinationNode = dataUtils.getNode(connection.destination.id, this.$refs.chart.internalNodes);
+                    if (sourceNode.type == "backendnode") {
+                        this.$data.saveMessage = "Backend should not be a source node.";
+                        this.$data.routeValid = false;
+                        break;
+                    } else if (destinationNode.type == "idsendpointnode") {
+                        this.$data.saveMessage = "IDS Endpoint should not be a destination node.";
+                        this.$data.routeValid = false;
+                        break;
+                    }
+                }
+            } else {
+                for (let connection of this.$refs.chart.internalConnections) {
+                    let sourceNode = dataUtils.getNode(connection.source.id, this.$refs.chart.internalNodes);
+                    let destinationNode = dataUtils.getNode(connection.destination.id, this.$refs.chart.internalNodes);
+                    if (sourceNode.type == "idsendpointnode") {
+                        this.$data.saveMessage = "IDS Endpoint should not be a source node.";
+                        this.$data.routeValid = false;
+                        break;
+                    } else if (destinationNode.type == "backendnode") {
+                        this.$data.saveMessage = "Backend should not be a destination node.";
+                        this.$data.routeValid = false;
+                        break;
+                    }
+                }
+            }
         },
         render: function (g, node, isSelected) {
             node.width = node.width || 120;
