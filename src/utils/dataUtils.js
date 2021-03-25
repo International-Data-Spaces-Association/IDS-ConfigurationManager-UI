@@ -538,7 +538,7 @@ export default {
                 }
                 restUtils.call("POST", "/api/ui/resource/representation", params).then(() => {
                     this.createConnectorEndpoint("http://data_" + Date.now(), endpointId => {
-                        this.createNewRoute(this.getCurrentDate() + " - " + title).then(routeId => {
+                        this.createNewRoute("addroutesoffering_" + this.getCurrentDate() + " - " + title).then(routeId => {
                             this.createSubRoute(routeId, genericEndpointId, 20, 150,
                                 endpointId, 220, 150, resourceId).then(() => {
                                     this.updateResourceAtBrokers(brokerUris, resourceId, callback);
