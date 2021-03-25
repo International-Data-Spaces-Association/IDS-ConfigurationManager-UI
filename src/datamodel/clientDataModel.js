@@ -232,6 +232,7 @@ export default {
 
 
     convertIdsConfigModel(idsConfigModel) {
+        console.log("idsConfigModel: ", idsConfigModel);
         let proxyUrl = "";
         let username = "";
         let password = "";

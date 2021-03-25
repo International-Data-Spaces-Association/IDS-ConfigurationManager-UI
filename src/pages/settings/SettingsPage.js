@@ -87,6 +87,7 @@ export default {
                     count++;
                 }
                 this.$data.proxyNoProxy = noProxy;
+                console.log(">>> SET LOG LEVEL: ", configModel.logLevel);
                 this.$data.logLevel = configModel.logLevel;
                 this.$data.connectorStatus = configModel.connectorStatus;
                 this.$data.connectorDeployMode = configModel.connectorDeployMode;
